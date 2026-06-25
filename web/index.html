@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance System</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Login gate -->
+  <section id="login-view" class="login hidden">
+    <form id="login-form" class="login-card">
+      <h1>Attendance</h1>
+      <p class="muted">Sign in with your admin token to manage the system.</p>
+      <label for="login-token">Admin token</label>
+      <input id="login-token" type="password" placeholder="admin-secret" autocomplete="off" />
+      <button type="submit" class="btn btn-primary">Sign in</button>
+      <p id="login-error" class="error hidden"></p>
+      <p class="muted small">Or open the <a href="#" id="goto-terminal">device terminal</a>.</p>
+    </form>
+  </section>
+
+  <!-- Main app -->
+  <div id="app-view" class="layout hidden">
+    <aside class="sidebar">
+      <div class="brand">Attendance</div>
+      <nav>
+        <a href="#dashboard" class="nav-link" data-view="dashboard">Dashboard</a>
+        <a href="#users" class="nav-link" data-view="users">Users</a>
+        <a href="#devices" class="nav-link" data-view="devices">Devices</a>
+        <a href="#attendance" class="nav-link" data-view="attendance">Attendance</a>
+        <a href="#terminal" class="nav-link" data-view="terminal">Terminal</a>
+      </nav>
+      <button id="logout-btn" class="btn btn-ghost logout">Sign out</button>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <h2 id="view-title">Dashboard</h2>
+        <div id="toast" class="toast hidden"></div>
+      </header>
+
+      <!-- Dashboard -->
+      <section id="dashboard" class="view">
+        <div class="cards">
+          <div class="stat-card"><span class="stat-num" id="stat-users">-</span><span class="stat-label">Active users</span></div>
+          <div class="stat-card"><span class="stat-num" id="stat-devices">-</span><span class="stat-label">Devices</span></div>
+          <div class="stat-card"><span class="stat-num" id="stat-today">-</span><span class="stat-label">Punches today</span></div>
+          <div class="stat-card"><span class="stat-num" id="stat-total">-</span><span class="stat-label">Total records</span></div>
+        </div>
+        <h3>Recent activity</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>User</th><th>Type</th><th>Device</th><th>Source</th></tr></thead>
+            <tbody id="recent-body"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="users" class="view hidden">
+        <div class="view-actions">
+          <button class="btn btn-primary" id="add-user-btn">+ Add user</button>
+          <label class="checkbox"><input type="checkbox" id="show-deleted" /> Show deleted</label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Email</th><th>Card</th><th>PIN</th><th>Status</th><th></th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Devices -->
+      <section id="devices" class="view hidden">
+        <div class="view-actions">
+          <button class="btn btn-primary" id="add-device-btn">+ Register device</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Location</th><th>Status</th><th>Last sync</th><th>API key</th><th></th></tr></thead>
+            <tbody id="devices-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Attendance -->
+      <section id="attendance" class="view hidden">
+        <div class="filters">
+          <select id="filter-user"><option value="">All users</option></select>
+          <select id="filter-device"><option value="">All devices</option></select>
+          <input type="date" id="filter-from" />
+          <input type="date" id="filter-to" />
+          <button class="btn" id="apply-filter">Filter</button>
+          <button class="btn btn-ghost" id="clear-filter">Clear</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Punch time</th><th>User</th><th>Type</th><th>Device</th><th>Source</th></tr></thead>
+            <tbody id="attendance-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Terminal -->
+      <section id="terminal" class="view hidden">
+        <div class="terminal-grid">
+          <div class="terminal-panel">
+            <h3>Device terminal</h3>
+            <p class="muted">Enter a device API key, then punch by card ID, PIN or employee code. This simulates an on-site kiosk and does not require the admin token.</p>
+            <label>Device API key</label>
+            <input id="term-key" type="text" placeholder="dev_…" />
+            <label>Identifier</label>
+            <div class="seg">
+              <select id="term-id-type">
+                <option value="card_id">Card ID</option>
+                <option value="pin">PIN</option>
+                <option value="employee_code">Employee code</option>
+              </select>
+              <input id="term-id-value" type="text" placeholder="value" />
+            </div>
+            <div class="punch-buttons">
+              <button class="btn btn-success big" data-punch="check_in">Check in</button>
+              <button class="btn btn-danger big" data-punch="check_out">Check out</button>
+            </div>
+            <div id="term-result" class="term-result"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="overlay hidden">
+    <div class="modal">
+      <div class="modal-head"><h3 id="modal-title"></h3><button class="modal-close" id="modal-close">&times;</button></div>
+      <form id="modal-form" class="modal-body"></form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
