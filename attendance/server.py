@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Callable
 from urllib.parse import parse_qs, urlsplit
 
-from . import auth, models, sync
+from . import auth, models, staticfiles, sync
 from .db import get_conn, init_db
 from .errors import AppError, NotFoundError, ValidationError
 
@@ -283,7 +283,34 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _serve_static(self, url_path: str) -> bool:
+        """Serve a file from the web directory. Returns True if handled."""
+        file_path = staticfiles.resolve(url_path)
+        if file_path is None:
+            return False
+        try:
+            with open(file_path, "rb") as fh:
+                body = fh.read()
+        except OSError:
+            return False
+
+        # index.html should never be cached so UI updates show up immediately.
+        cache = "no-cache" if file_path.endswith("index.html") else "max-age=300"
+        self.send_response(200)
+        self.send_header("Content-Type", staticfiles.content_type_for(file_path))
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", cache)
+        self.end_headers()
+        self.wfile.write(body)
+        return True
+
     def do_GET(self):
+        path = urlsplit(self.path).path
+        # API and health checks go through the router; everything else is
+        # treated as a request for the static web client.
+        if not path.startswith("/api/") and path not in ("/health", "/api"):
+            if self._serve_static(path):
+                return
         self._handle("GET")
 
     def do_POST(self):

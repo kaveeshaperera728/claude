@@ -210,6 +210,30 @@ class HttpIntegrationTests(unittest.TestCase):
         status, _ = self.request("POST", "/api/sync", {"records": []})
         self.assertEqual(status, 401)
 
+    def _raw_get(self, path):
+        conn = HTTPConnection("127.0.0.1", self.port)
+        conn.request("GET", path)
+        resp = conn.getresponse()
+        body = resp.read().decode()
+        ctype = resp.getheader("Content-Type")
+        conn.close()
+        return resp.status, ctype, body
+
+    def test_serves_web_index(self):
+        status, ctype, body = self._raw_get("/")
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", ctype)
+        self.assertIn("<title>Attendance System</title>", body)
+
+    def test_spa_fallback_for_unknown_page(self):
+        status, ctype, _ = self._raw_get("/dashboard")
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", ctype)
+
+    def test_static_path_traversal_blocked(self):
+        status, _, _ = self._raw_get("/../attendance/db.py")
+        self.assertEqual(status, 404)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
